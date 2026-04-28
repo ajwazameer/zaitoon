@@ -15,17 +15,21 @@ export default function LeafletCheckoutMap({ customerCoords, branches, onCustome
     const ref = useRef<HTMLDivElement>(null)
     const mapRef = useRef<any>(null)
     const markerRef = useRef<any>(null)
+    const leafletRef = useRef<any>(null)
 
+    // ── Initialize map once ────────────────────────────────────────
     useEffect(() => {
         if (!ref.current || mapRef.current) return
         import('leaflet').then(L => {
+            leafletRef.current = L
+
             const center: [number, number] = customerCoords
                 ? [customerCoords.lat, customerCoords.lng]
                 : [31.5204, 74.3587]
 
             const map = L.map(ref.current!, { zoomControl: true, dragging: !readOnly })
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
-            map.setView(center, 13)
+            map.setView(center, 14)
 
             // Branch pins
             const branchIcon = L.divIcon({
@@ -59,7 +63,11 @@ export default function LeafletCheckoutMap({ customerCoords, branches, onCustome
                     if (markerRef.current) {
                         markerRef.current.setLatLng([lat, lng])
                     } else {
-                        const m = L.marker([lat, lng], { icon: custIcon, draggable: true })
+                        const custIconClick = L.divIcon({
+                            html: `<div style="width:22px;height:22px;background:#C9920A;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4)"></div>`,
+                            iconSize: [22, 22], iconAnchor: [11, 11], className: '',
+                        })
+                        const m = L.marker([lat, lng], { icon: custIconClick, draggable: true })
                         m.on('dragend', () => {
                             const p = m.getLatLng()
                             onCustomerMove(p.lat, p.lng)
@@ -73,9 +81,39 @@ export default function LeafletCheckoutMap({ customerCoords, branches, onCustome
 
             mapRef.current = map
         })
-        return () => { mapRef.current?.remove(); mapRef.current = null }
+        return () => { mapRef.current?.remove(); mapRef.current = null; markerRef.current = null }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])   // run once — subsequent coord changes handled via markerRef
+    }, [])
+
+    // ── React to external coord changes (e.g. geocoding result) ───
+    useEffect(() => {
+        if (!mapRef.current || !customerCoords || !leafletRef.current) return
+        const L = leafletRef.current
+        const { lat, lng } = customerCoords
+
+        if (markerRef.current) {
+            // Move existing marker
+            markerRef.current.setLatLng([lat, lng])
+        } else {
+            // Create new marker
+            const custIcon = L.divIcon({
+                html: `<div style="width:22px;height:22px;background:#C9920A;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4)"></div>`,
+                iconSize: [22, 22], iconAnchor: [11, 11], className: '',
+            })
+            const m = L.marker([lat, lng], { icon: custIcon, draggable: !readOnly })
+            if (!readOnly) {
+                m.on('dragend', () => {
+                    const p = m.getLatLng()
+                    onCustomerMove(p.lat, p.lng)
+                })
+            }
+            m.addTo(mapRef.current)
+            markerRef.current = m
+        }
+
+        // Smoothly pan map to new location
+        mapRef.current.flyTo([lat, lng], 15, { duration: 1.0 })
+    }, [customerCoords, readOnly, onCustomerMove])
 
     return <div ref={ref} className="w-full h-full" />
 }

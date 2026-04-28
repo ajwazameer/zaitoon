@@ -1,8 +1,8 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MapPin, Navigation, X, Pencil, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { MapPin, Navigation, X, Pencil, CheckCircle2, AlertTriangle, Search, Loader2 } from 'lucide-react'
 import { getBranches } from '@/lib/api/branches'
 import { haversineDistance, calculateDeliveryFee, MAX_DELIVERY_KM } from '@/lib/distance'
 import { useLocationStore } from '@/store/useLocationStore'
@@ -23,6 +23,21 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
         return data.display_name ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`
     } catch {
         return `${lat.toFixed(5)}, ${lng.toFixed(5)}`
+    }
+}
+
+// ── Forward geocode with Nominatim ─────────────────────────────────
+interface GeoSuggestion { display_name: string; lat: string; lon: string }
+
+async function forwardGeocode(query: string): Promise<GeoSuggestion[]> {
+    try {
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=pk`
+        const res = await fetch(url, { headers: { 'Accept-Language': 'en' } })
+        if (!res.ok) return []
+        const data = await res.json()
+        return Array.isArray(data) ? data : []
+    } catch {
+        return []
     }
 }
 
@@ -53,6 +68,12 @@ export default function LocationModal({ forceOpen = false, onClose, allowBackdro
     const [manualBranches, setManualBranches] = useState<any[]>([])
     const [manualFee, setManualFee] = useState<{ distanceKm: number; fee: number | null; outOfRange: boolean } | null>(null)
     const [confirming, setConfirming] = useState(false)
+
+    // Geocoding state
+    const [suggestions, setSuggestions] = useState<GeoSuggestion[]>([])
+    const [geocoding, setGeocoding] = useState(false)
+    const [showSuggestions, setShowSuggestions] = useState(false)
+    const geoDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const { locationSet, setLocation } = useLocationStore()
 
@@ -138,6 +159,30 @@ export default function LocationModal({ forceOpen = false, onClose, allowBackdro
         setError('')
         const branches = await getBranches()
         setManualBranches(branches ?? [])
+    }, [])
+
+    // ── Geocoding: debounced address search ────────────────────
+    const handleAddressChange = useCallback((value: string) => {
+        setManualAddress(value)
+        setSuggestions([])
+        if (geoDebounceRef.current) clearTimeout(geoDebounceRef.current)
+        if (value.trim().length < 4) { setShowSuggestions(false); return }
+        geoDebounceRef.current = setTimeout(async () => {
+            setGeocoding(true)
+            const results = await forwardGeocode(value)
+            setSuggestions(results)
+            setShowSuggestions(results.length > 0)
+            setGeocoding(false)
+        }, 600)
+    }, [])
+
+    const handleSelectSuggestion = useCallback((suggestion: GeoSuggestion) => {
+        const lat = parseFloat(suggestion.lat)
+        const lng = parseFloat(suggestion.lon)
+        setManualAddress(suggestion.display_name)
+        setManualCoords({ lat, lng })
+        setSuggestions([])
+        setShowSuggestions(false)
     }, [])
 
     // Recalc fee when pin moves in manual mode
@@ -303,27 +348,66 @@ export default function LocationModal({ forceOpen = false, onClose, allowBackdro
                                         <h2 className="font-display text-[20px] font-[700] text-center" style={{ color: 'var(--charcoal)' }}>Enter Your Address</h2>
                                         <p className="text-[13px] text-center" style={{ color: 'var(--stone)' }}>Type your address and pin your location on the map.</p>
 
-                                        <div>
+                                        <div className="relative">
                                             <label htmlFor="loc-manual-addr" className="block text-[11px] font-[700] uppercase tracking-wider mb-1.5"
                                                 style={{ color: 'var(--stone)' }}>
                                                 Delivery Address <span style={{ color: '#DC2626' }}>*</span>
                                             </label>
-                                            <input
-                                                id="loc-manual-addr"
-                                                type="text"
-                                                value={manualAddress}
-                                                onChange={e => setManualAddress(e.target.value)}
-                                                placeholder="e.g. E-88 Wapda Town, Lahore"
-                                                className="w-full rounded-[10px] px-4 py-3 text-[14px] transition-all"
-                                                style={{
-                                                    background: 'var(--parchment)',
-                                                    border: '2px solid var(--linen)',
-                                                    color: 'var(--charcoal)',
-                                                    outline: 'none'
-                                                }}
-                                                onFocus={e => { e.currentTarget.style.borderColor = 'var(--green-base)' }}
-                                                onBlur={e => { e.currentTarget.style.borderColor = 'var(--linen)' }}
-                                            />
+                                            <div className="relative">
+                                                <input
+                                                    id="loc-manual-addr"
+                                                    type="text"
+                                                    value={manualAddress}
+                                                    onChange={e => handleAddressChange(e.target.value)}
+                                                    placeholder="e.g. E-88 Wapda Town, Lahore"
+                                                    autoComplete="off"
+                                                    className="w-full rounded-[10px] px-4 py-3 pr-10 text-[14px] transition-all"
+                                                    style={{
+                                                        background: 'var(--parchment)',
+                                                        border: '2px solid var(--linen)',
+                                                        color: 'var(--charcoal)',
+                                                        outline: 'none'
+                                                    }}
+                                                    onFocus={e => { e.currentTarget.style.borderColor = 'var(--green-base)' }}
+                                                    onBlur={e => {
+                                                        e.currentTarget.style.borderColor = 'var(--linen)'
+                                                        // Delay hiding so click on suggestion registers
+                                                        setTimeout(() => setShowSuggestions(false), 200)
+                                                    }}
+                                                />
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                    {geocoding
+                                                        ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--green-base)' }} />
+                                                        : <Search className="w-4 h-4" style={{ color: 'var(--stone)' }} />}
+                                                </div>
+                                            </div>
+
+                                            {/* Suggestions dropdown */}
+                                            {showSuggestions && suggestions.length > 0 && (
+                                                <div className="absolute z-[300] w-full mt-1 rounded-[10px] overflow-hidden shadow-xl"
+                                                    style={{ background: 'white', border: '1.5px solid var(--linen)' }}>
+                                                    {suggestions.map((s, i) => (
+                                                        <button
+                                                            key={i}
+                                                            type="button"
+                                                            onMouseDown={() => handleSelectSuggestion(s)}
+                                                            className="w-full text-left px-4 py-2.5 text-[13px] transition-colors flex items-start gap-2"
+                                                            style={{ borderBottom: i < suggestions.length - 1 ? '1px solid var(--linen)' : 'none' }}
+                                                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--cream)' }}
+                                                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'white' }}
+                                                        >
+                                                            <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: 'var(--green-dark)' }} />
+                                                            <span className="line-clamp-2" style={{ color: 'var(--charcoal)' }}>{s.display_name}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {manualCoords && (
+                                                <p className="mt-1.5 text-[11px] font-[600]" style={{ color: 'var(--green-dark)' }}>
+                                                    ✓ Location pinned on map
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div>

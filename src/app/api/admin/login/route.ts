@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
+import { hashPassword, verifyPassword, isPlainText } from '@/lib/utils/password'
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Artificial delay — brute force protection
+    // Constant-time artificial delay — brute force / timing attack protection
     await new Promise(r => setTimeout(r, 400))
 
     const adminSupabase = createClient(
@@ -21,16 +22,17 @@ export async function POST(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Find user by username + password + active
+    // Fetch user by username only (no password in query — prevents timing leak)
     const { data: adminUser, error } = await adminSupabase
       .from('admin_users')
-      .select('id, username, role, name, is_active')
+      .select('id, username, password, role, name, is_active')
       .eq('username', username.toLowerCase().trim())
-      .eq('password', password.trim())
       .eq('is_active', true)
       .single()
 
     if (error || !adminUser) {
+      // Constant-time: still run a dummy hash to prevent timing-based user enumeration
+      await hashPassword('dummy-timing-guard')
       console.log('Login failed for:', username)
       return NextResponse.json(
         { error: 'Invalid username or password' },
@@ -38,11 +40,44 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Generate session token
+    // ── Password verification ──────────────────────────────────────────────────
+    let passwordValid = false
+
+    if (isPlainText(adminUser.password)) {
+      // Legacy plain-text password — compare directly
+      passwordValid = adminUser.password === password.trim()
+
+      if (passwordValid) {
+        // ── Lazy upgrade: hash and save immediately ────────────────────────────
+        try {
+          const hashed = await hashPassword(password.trim())
+          await adminSupabase
+            .from('admin_users')
+            .update({ password: hashed })
+            .eq('id', adminUser.id)
+          console.log(`Password upgraded to scrypt hash for user: ${adminUser.username}`)
+        } catch (upgradeErr) {
+          // Non-blocking — login still succeeds even if upgrade fails
+          console.error('Password upgrade failed (non-critical):', upgradeErr)
+        }
+      }
+    } else {
+      // Modern scrypt hash — use timing-safe comparison
+      passwordValid = await verifyPassword(password.trim(), adminUser.password)
+    }
+
+    if (!passwordValid) {
+      console.log('Login failed (wrong password) for:', username)
+      return NextResponse.json(
+        { error: 'Invalid username or password' },
+        { status: 401 }
+      )
+    }
+
+    // ── Create session ─────────────────────────────────────────────────────────
     const sessionToken = crypto.randomUUID()
     const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString()
 
-    // Save session to DB
     const { error: sessionError } = await adminSupabase
       .from('admin_sessions')
       .insert({
@@ -61,7 +96,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Set HTTP-only cookie
+    // ── Set HTTP-only secure cookie ────────────────────────────────────────────
     const cookieStore = await cookies()
     cookieStore.set('admin_session', sessionToken, {
       httpOnly: true,

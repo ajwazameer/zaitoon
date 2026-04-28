@@ -146,7 +146,7 @@ export default function HomePage() {
 
           <motion.div
             style={{ y: heroY, opacity: heroOpacity }}
-            className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 w-full flex flex-col items-center lg:items-start min-h-[100dvh] pt-[120px] pb-[80px]"
+            className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 w-full flex flex-col lg:flex-row items-center lg:items-center min-h-[100dvh] pt-[120px] pb-[80px] gap-8"
           >
             {/* HERO LEFT CONTENT */}
             <div className="w-full lg:w-[68%] flex flex-col items-start pt-8 lg:pt-0">
@@ -256,6 +256,48 @@ export default function HomePage() {
                 </div>
               </motion.div>
             </div>
+
+            {/* HERO RIGHT — Logo image */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="hidden lg:flex flex-col items-center justify-center flex-1 shrink-0"
+            >
+              <motion.div
+                animate={{ y: [0, -14, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                className="relative flex items-center justify-center w-full"
+              >
+                {/* Outer ambient glow — scales with image */}
+                <div
+                  className="absolute rounded-full pointer-events-none"
+                  style={{
+                    inset: '-18%',
+                    background: 'radial-gradient(circle, rgba(156,175,136,0.42) 0%, transparent 68%)',
+                    filter: 'blur(36px)',
+                  }}
+                />
+                {/* Inner highlight border */}
+                <div
+                  className="absolute pointer-events-none z-20"
+                  style={{
+                    inset: '-3px',
+                    borderRadius: '34px',
+                    border: '1.5px solid rgba(156,175,136,0.20)',
+                  }}
+                />
+                <img
+                  src="/photo.PNG"
+                  alt="Zaitoon – House of Shawarma & BBQ"
+                  className="relative z-10 rounded-[32px] object-contain w-full h-auto"
+                  style={{
+                    maxWidth: 'clamp(300px, 34vw, 480px)',
+                    filter: 'drop-shadow(0 28px 60px rgba(0,0,0,0.55)) drop-shadow(0 6px 18px rgba(0,0,0,0.28))',
+                  }}
+                />
+              </motion.div>
+            </motion.div>
 
           </motion.div>
 

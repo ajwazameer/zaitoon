@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
@@ -11,7 +11,6 @@ import { getBranches } from '@/lib/api/branches'
 import { createOrder } from '@/lib/api/orders'
 import {
     getOrCreateCustomer,
-    addLoyaltyPoints,
     redeemLoyaltyPoints,
     getCustomerByPhone,
     processReferral,
@@ -317,11 +316,10 @@ export default function CheckoutPage() {
                 paymentMethod: payMethod,
             })
 
-            // 4. Award loyalty points
+            // 4. Loyalty points are awarded automatically by the database trigger
+            //    when admin changes the order status to 'confirmed'.
+            //    No client-side point award here — prevents premature/duplicate awards.
             const earnedPoints = calculateEarnedPoints(total)
-            if (earnedPoints > 0 && customerId) {
-                await addLoyaltyPoints(customerId, order.id, earnedPoints, total)
-            }
 
             // 4b. Process referral (first order only, fails silently)
             if (customerId) {

@@ -103,12 +103,17 @@ export async function getOrderByNumber(orderNumber: string) {
 }
 
 export async function updateOrderStatus(orderId: string, status: string) {
-    const { error } = await supabase
-        .from('orders')
-        .update({ status })
-        .eq('id', orderId)
+    const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+        credentials: 'include', // sends admin_session cookie
+    })
 
-    if (error) throw error
+    if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error ?? `Failed to update order status (${res.status})`)
+    }
 }
 
 // Admin — get all orders with pagination

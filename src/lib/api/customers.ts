@@ -57,33 +57,20 @@ export async function getLoyaltyHistory(customerId: string) {
     return data
 }
 
-export async function addLoyaltyPoints(customerId: string, orderId: string, points: number, total: number) {
-    // Add transaction record
-    await supabase.from('loyalty_transactions').insert({
-        customer_id: customerId,
-        order_id: orderId,
-        type: 'earned',
-        points,
-        description: `Earned from order`,
-    })
-
-    // Update customer totals
-    const { data: customer } = await supabase
-        .from('customers')
-        .select('loyalty_points, total_orders, total_spent')
-        .eq('id', customerId)
-        .single()
-
-    if (customer) {
-        const newPoints = customer.loyalty_points + points
-        const newTier = calculateTier(newPoints)
-        await supabase.from('customers').update({
-            loyalty_points: newPoints,
-            tier: newTier,
-            total_orders: customer.total_orders + 1,
-            total_spent: customer.total_spent + total,
-        }).eq('id', customerId)
-    }
+/**
+ * @deprecated — Loyalty points are now awarded by the PostgreSQL trigger
+ * `trg_loyalty_on_order_status` when an order status changes to 'confirmed'.
+ * Cancellations also auto-deduct via the same trigger.
+ * This function is kept as a no-op to avoid import errors during migration.
+ */
+export async function addLoyaltyPoints(
+    _customerId: string,
+    _orderId: string,
+    _points: number,
+    _total: number
+): Promise<void> {
+    // No-op: handled by DB trigger fn_loyalty_on_order_status_change()
+    return
 }
 
 export async function redeemLoyaltyPoints(customerId: string, orderId: string | null, points: number) {
