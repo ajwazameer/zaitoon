@@ -28,6 +28,7 @@ const itemSchema = z.object({
     description: z.string().optional(),
     badge: z.string().optional(),
     accompaniments: z.string().optional(),
+    priceOnRequest: z.boolean().optional(),
 })
 type ItemForm = z.infer<typeof itemSchema>
 
@@ -77,7 +78,7 @@ export default function AdminMenuPage() {
     // ── Item form ─────────────────────────────────────────────────────────────
     const { register, handleSubmit, reset, formState: { errors } } = useForm<ItemForm>({
         resolver: zodResolver(itemSchema),
-        defaultValues: { name: '', category: '', price: 0, priceL: null, description: '', badge: '', accompaniments: '' }
+        defaultValues: { name: '', category: '', price: 0, priceL: null, description: '', badge: '', accompaniments: '', priceOnRequest: false }
     })
 
     const openEdit = async (item: any) => {
@@ -90,6 +91,7 @@ export default function AdminMenuPage() {
             description: item.description ?? '',
             badge: item.badge ?? '',
             accompaniments: item.accompaniments ?? '',
+            priceOnRequest: item.price_on_request ?? false,
         })
         const v = await getItemVariants(item.id).catch(() => [])
         setVariants(v.map((r: any) => ({ label: r.label, price: r.price })))
@@ -97,7 +99,7 @@ export default function AdminMenuPage() {
     const openAdd = () => {
         setEditing({ id: `item_${Date.now()}`, name: '', category_id: categories[0]?.id || '', price: 0, rating: 4.5, is_available: true, image_url: null })
         setIsNew(true)
-        reset({ name: '', category: categories[0]?.id || '', price: 0, description: '', badge: '', accompaniments: '' })
+        reset({ name: '', category: categories[0]?.id || '', price: 0, description: '', badge: '', accompaniments: '', priceOnRequest: false })
         setVariants([])
     }
 
@@ -114,6 +116,7 @@ export default function AdminMenuPage() {
             badge: data.badge?.trim() || null,
             accompaniments: data.accompaniments?.trim() || null,
             image_url: editing?.image_url || null,
+            price_on_request: data.priceOnRequest ?? false,
         }
         try {
             if (isNew) {
@@ -343,6 +346,10 @@ export default function AdminMenuPage() {
                                     <input {...register('priceL', { setValueAs: v => (v === '' || isNaN(Number(v))) ? null : Number(v) })}
                                         type="number" className={fieldCls} placeholder="Optional" />
                                 </div>
+                            </div>
+                            <div className="flex items-center gap-2 mt-2">
+                                <input type="checkbox" {...register('priceOnRequest')} id="priceOnRequest" className="w-4 h-4 text-green-600 rounded bg-white border-gray-300 focus:ring-green-500" />
+                                <label htmlFor="priceOnRequest" className="text-sm font-semibold text-gray-700 cursor-pointer">Show "Ask for price" instead of amount</label>
                             </div>
 
                             {/* Description */}
