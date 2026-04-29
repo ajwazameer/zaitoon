@@ -292,7 +292,6 @@ export default function HomePage() {
                   alt="Zaitoon – House of Shawarma & BBQ"
                   className="relative z-10 rounded-[32px] object-contain w-full h-auto"
                   style={{
-                    maxWidth: 'clamp(300px, 34vw, 480px)',
                     filter: 'drop-shadow(0 28px 60px rgba(0,0,0,0.55)) drop-shadow(0 6px 18px rgba(0,0,0,0.28))',
                   }}
                 />
