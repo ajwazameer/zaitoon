@@ -262,39 +262,39 @@ export default function HomePage() {
               initial={{ opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="hidden lg:flex flex-col items-center justify-center flex-1 shrink-0"
+              className="flex flex-col items-center justify-center flex-1 shrink-0 order-first lg:order-none mb-12 lg:mb-0"
             >
               <motion.div
                 animate={{ y: [0, -14, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                 className="relative flex items-center justify-center w-full"
               >
-                {/* Outer ambient glow — scales with image */}
+                {/* Outer ambient glow — matches the logo's green tone */}
                 <div
                   className="absolute rounded-full pointer-events-none"
                   style={{
-                    inset: '-18%',
-                    background: 'radial-gradient(circle, rgba(156,175,136,0.42) 0%, transparent 68%)',
-                    filter: 'blur(36px)',
+                    inset: '-15%',
+                    background: 'radial-gradient(circle, rgba(76,92,45,0.4) 0%, transparent 70%)',
+                    filter: 'blur(50px)',
                   }}
                 />
-                {/* Inner highlight border */}
-                <div
-                  className="absolute pointer-events-none z-20"
-                  style={{
-                    inset: '-3px',
-                    borderRadius: '34px',
-                    border: '1.5px solid rgba(156,175,136,0.20)',
-                  }}
+                
+                {/* Decorative rotating ring */}
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                  className="absolute -inset-4 rounded-[48px] border border-dashed border-[var(--green-light)] opacity-20"
                 />
-                <img
-                  src="/photo.PNG"
-                  alt="Zaitoon – House of Shawarma & BBQ"
-                  className="relative z-10 rounded-[32px] object-contain w-full h-auto"
-                  style={{
-                    filter: 'drop-shadow(0 28px 60px rgba(0,0,0,0.55)) drop-shadow(0 6px 18px rgba(0,0,0,0.28))',
-                  }}
-                />
+
+                <div className="relative z-10 w-full max-w-[320px] lg:max-w-[500px] aspect-square overflow-hidden rounded-[40px] shadow-[0_32px_64px_rgba(0,0,0,0.5)] border border-white/10">
+                  <img
+                    src="/photo.PNG"
+                    alt="Zaitoon – House of Shawarma & BBQ"
+                    className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-700"
+                  />
+                  {/* Subtle glass overlay on the image */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                </div>
               </motion.div>
             </motion.div>
 
