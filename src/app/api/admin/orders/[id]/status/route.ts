@@ -24,7 +24,7 @@ export async function PATCH(
 
     const { data: session, error: sessionError } = await adminSupabase
       .from('admin_sessions')
-      .select('id, admin_id, role, expires_at')
+      .select('token, admin_id, role, expires_at')
       .eq('token', sessionToken)
       .single()
 
