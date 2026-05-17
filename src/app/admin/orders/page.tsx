@@ -548,27 +548,27 @@ export default function AdminOrdersPage() {
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
                                 transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-                                className="bg-white rounded-3xl shadow-xl max-w-md w-full overflow-hidden border border-[#E7E0D8] flex flex-col my-8 print:hidden"
+                                className="bg-white rounded-3xl shadow-xl max-w-md w-full overflow-hidden border border-[#E7E0D8] flex flex-col max-h-[85vh] my-4 print:hidden"
                             >
                                 {/* Modal Header */}
-                                <div className="p-4 border-b border-[#E7E0D8] flex items-center justify-between bg-gradient-to-r from-[#1B4332] to-[#0A1F13] text-white">
+                                <div className="p-4 border-b border-[#E7E0D8] flex items-center justify-between bg-gradient-to-r from-[#1B4332] to-[#0A1F13] text-white shrink-0">
                                     <div className="flex items-center gap-2">
                                         <Printer size={18} className="text-[#F0B429]" />
                                         <span className="font-bold text-sm">Print Receipt</span>
                                     </div>
                                     <button
                                         onClick={() => setSelectedPrintOrder(null)}
-                                        className="text-white/80 hover:text-white font-bold"
+                                        className="text-white/80 hover:text-white font-bold font-mono text-base"
                                     >
                                         ✕
                                     </button>
                                 </div>
 
                                 {/* Print Preview Container */}
-                                <div className="p-6 bg-[#F9F6F0] flex-1 overflow-y-auto max-h-[70vh] flex justify-center">
+                                <div className="p-4 sm:p-5 bg-[#F9F6F0] flex-1 overflow-y-auto min-h-0 flex flex-col items-center">
                                     <div
                                         id="print-receipt-portal"
-                                        className="bg-white p-6 shadow-sm border border-[#E7E0D8] rounded-xl text-black font-mono text-[11px] space-y-4 max-w-[320px] w-full"
+                                        className="bg-white p-4 sm:p-5 shadow-sm border border-[#E7E0D8] rounded-xl text-black font-mono text-[11px] space-y-3 max-w-[320px] w-full"
                                     >
                                         {/* Receipt details */}
                                         <div className="text-center space-y-1">
@@ -649,7 +649,7 @@ export default function AdminOrdersPage() {
                                 </div>
 
                                 {/* Modal Actions */}
-                                <div className="p-4 border-t border-[#E7E0D8] flex gap-3 bg-white">
+                                <div className="p-4 border-t border-[#E7E0D8] flex gap-3 bg-white shrink-0">
                                     <button
                                         onClick={() => setSelectedPrintOrder(null)}
                                         className="flex-1 py-3 rounded-xl border border-[#E7E0D8] font-bold text-xs hover:bg-[#F9F6F0] transition-colors"

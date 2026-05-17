@@ -41,6 +41,7 @@
     /* ── Typography ── */
     --font-display: 'Lora', Georgia, serif !important;
     --font-body:    'Montserrat', system-ui, sans-serif !important;
+    --font-urdu:    'Noto Sans Arabic', system-ui, sans-serif !important;
 
     /* ── Shadow Tokens ── */
     --shadow-sm:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);

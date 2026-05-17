@@ -342,34 +342,25 @@ export default function CreateOrderModal({ isOpen, onClose }: Props) {
                                     )}
                                 </div>
 
-                                {/* Horizontal Category Chips */}
-                                <div 
-                                    className="flex items-center gap-1.5 overflow-x-auto py-1 -mx-2 px-2"
-                                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                                >
-                                    <button
-                                        onClick={() => setSelectedCategoryId('all')}
-                                        className={`shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${
-                                            selectedCategoryId === 'all'
-                                                ? 'bg-[var(--green-base)] text-white border-[var(--green-base)] shadow-sm'
-                                                : 'bg-white text-gray-600 border-[#E7E0D8] hover:border-gray-300'
-                                        }`}
+                                {/* Category Dropdown menu */}
+                                <div className="relative">
+                                    <select
+                                        value={selectedCategoryId}
+                                        onChange={e => setSelectedCategoryId(e.target.value)}
+                                        className="w-full px-3.5 py-2 text-xs font-bold rounded-xl border border-[#E7E0D8] focus:outline-none focus:border-[var(--green-base)] bg-white text-gray-700 appearance-none transition-all cursor-pointer shadow-sm hover:border-gray-300 pr-10"
                                     >
-                                        All
-                                    </button>
-                                    {categories.map(cat => (
-                                        <button
-                                            key={cat.id}
-                                            onClick={() => setSelectedCategoryId(cat.id)}
-                                            className={`shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${
-                                                selectedCategoryId === cat.id
-                                                    ? 'bg-[var(--green-base)] text-white border-[var(--green-base)] shadow-sm'
-                                                    : 'bg-white text-gray-600 border-[#E7E0D8] hover:border-gray-300'
-                                            }`}
-                                        >
-                                            {cat.label}
-                                        </button>
-                                    ))}
+                                        <option value="all">All Categories</option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.id}>
+                                                {cat.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3.5 h-3.5">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                        </svg>
+                                    </span>
                                 </div>
                             </div>
                             <div className="flex-1 overflow-y-auto p-4 space-y-2">
