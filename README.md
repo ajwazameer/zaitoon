@@ -102,8 +102,11 @@ Built as part of the Web Technologies course at COMSATS University Islamabad, La
 ---
 
 ## Screenshots
+<img width="1600" height="900" alt="zaitoon_01_hero" src="https://github.com/user-attachments/assets/5c285a57-8812-4e3f-acc8-55baae65dcbe" />
+<img width="1600" height="1020" alt="zaitoon_02_web_screens" src="https://github.com/user-attachments/assets/19e31912-da7d-4b73-b367-6d23265babdd" />
+<img width="1600" height="800" alt="zaitoon_03_mobile_screens" src="https://github.com/user-attachments/assets/ae07a70c-2bd7-45d1-b60c-c6a856c2c871" />
+<img width="1600" height="1000" alt="zaitoon_04_admin_features" src="https://github.com/user-attachments/assets/bb601b0b-0b56-4a83-82f6-79c5430c1a3a" />
 
-> Add screenshots here once the site is live — grab them from zaitoonpk.com
 
 ---
 
